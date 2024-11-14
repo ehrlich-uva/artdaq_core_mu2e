@@ -3,6 +3,8 @@
 
 #include "artdaq-core-mu2e/Data/DTCDataDecoder.hh"
 
+#include "TRACE/tracemf.h"
+
 #include <messagefacility/MessageLogger/MessageLogger.h> // Putting this here so that Offline/DAQ/src/FragmentAna_module.cc can use it
 
 namespace mu2e {
@@ -16,34 +18,56 @@ namespace mu2e {
 
     CalorimeterTestDataDecoder(DTCLib::DTC_SubEvent const& f);
 
-    // CalorimeterHitTestDataPacket: Each hit is readout as a variable length sequence of data packets
+    //Class to swap pairs of 16-bit words and extract 12-bit words without memory buffers
+    class Data12bitReader {
+      private:
+        const uint16_t* dataPtr;
+
+      public:
+        Data12bitReader(const uint16_t* dataPtr) : dataPtr(dataPtr) {}
+
+        uint16_t operator[](size_t index) const {
+          uint16_t temp;
+          size_t wordIndex1 = (index * 3) / 4;
+          size_t wordIndex2 = wordIndex1+1;
+          uint16_t word1 = dataPtr[wordIndex1%2==0?wordIndex1+1:wordIndex1-1];
+          uint16_t word2 = dataPtr[wordIndex2%2==0?wordIndex2+1:wordIndex2-1];
+
+          switch (index % 4) {
+            case 0:
+              temp = (word1 >> 4) & 0x0FFF;
+              break;
+            case 1:
+              temp = ((word1 & 0x000F) << 8) | ((word2 & 0xFF00) >> 8);
+              break;
+            case 2:
+              temp = ((word1 & 0x00FF) << 4) | ((word2 & 0xF000) >> 12);
+              break;
+            case 3:
+              temp = word2 & 0x0FFF;
+              break;
+          }
+          return temp;
+        }
+    };
+
     struct CalorimeterHitTestDataPacket
     {
       uint16_t BeginMarker : 12; //0xAAA
       uint16_t BoardID : 12; //unique board ID from 0 - 255
       uint16_t ChannelID : 12; // channel ID from 0-19
       uint16_t InPayloadEventWindowTag : 12;
- 
-      // there are 4 types of sample length
-      uint16_t SampleType0  : 12;
-
-      uint16_t SampleType1A : 4;
-      uint16_t SampleType1B : 8;
-
-      uint16_t SampleType2A : 8;
-      uint16_t SampleType2B : 4;
-
-      uint16_t LastSampleMarker : 12;
+       
+      uint16_t LastSampleMarker : 12; //0xFFF
       uint16_t ErrorFlags : 12;
       uint32_t Time : 24;
       uint16_t IndexOfMaxDigitizerSample : 12;
       uint16_t NumberOfSamples : 12;
 
       CalorimeterHitTestDataPacket()
-	: BoardID(0), ChannelID(0), InPayloadEventWindowTag(0), ErrorFlags(0), Time(0), IndexOfMaxDigitizerSample(0), NumberOfSamples(0) {}
+      : BeginMarker(0), BoardID(0), ChannelID(0), InPayloadEventWindowTag(0), LastSampleMarker(0), ErrorFlags(0), Time(0), IndexOfMaxDigitizerSample(0), NumberOfSamples(0) {}
     };
-	  
-	  
+	  	  
     // CalorimeterFooterPacket: after transmission of all the hits the event is closed by a final packet containing the informaton about all the chanels that are reconstructed online in the FPGA:
     struct CalorimeterFooterPacket
     {
@@ -64,9 +88,8 @@ namespace mu2e {
     };
 
     std::vector<std::pair<CalorimeterHitTestDataPacket, std::vector<uint16_t>>>* GetCalorimeterHitData(size_t blockIndex) const;
+    std::vector<std::pair<CalorimeterCountersDataPacket, std::vector<uint32_t>>>* GetCalorimeterCountersData(size_t blockIndex) const;
     std::unique_ptr<CalorimeterFooterPacket> GetCalorimeterFooter(size_t blockIndex) const;
-    std::vector<std::pair<CalorimeterHitTestDataPacket, uint16_t>> GetCalorimeterHitsForTrigger(size_t blockIndex) const;
-    
   };
 }  // namespace mu2e
 #endif 
