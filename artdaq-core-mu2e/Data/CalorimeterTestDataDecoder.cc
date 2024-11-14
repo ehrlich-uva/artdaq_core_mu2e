@@ -57,8 +57,6 @@ namespace mu2e {
       return output;
     }
     
-    //std::cout<<"GetCalorimeterHitData : Reading "<<nPackets<<" 16-byte packets...\n";
-
     auto blockPos = reinterpret_cast<const uint8_t*>(blockDataPtr); //byte position in block (multiple of 16)
 	  while(blockPos < reinterpret_cast<const uint8_t*>(blockDataPtr) + dataSize){ //until the end of this block      
 
