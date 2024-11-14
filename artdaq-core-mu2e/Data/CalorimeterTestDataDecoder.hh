@@ -84,7 +84,12 @@ namespace mu2e {
       uint16_t DIRACF;
       CalorimeterFooterPacket ()
 	: DetectorType(0), BoardID(0), unused(0), ChannelStatusFlagA(0), ChannelStatusFlagC(0) {}
+    };
 
+    struct CalorimeterCountersDataPacket
+    {
+      uint32_t counter;
+      CalorimeterCountersDataPacket() : counter(0) {}
     };
 
     std::vector<std::pair<CalorimeterHitTestDataPacket, std::vector<uint16_t>>>* GetCalorimeterHitData(size_t blockIndex) const;
