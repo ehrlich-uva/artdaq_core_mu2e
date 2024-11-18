@@ -7,7 +7,6 @@ cet_make_library(
   Mu2eEventHeader.cc
   DTCDataDecoder.cc 
   CalorimeterDataDecoder.cc
-  CalorimeterTestDataDecoder.cc
   CRVDataDecoder.cc 
   TrackerDataDecoder.cc
   LIBRARIES PUBLIC
