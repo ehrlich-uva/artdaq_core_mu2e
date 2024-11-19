@@ -112,8 +112,8 @@ namespace mu2e {
 
     struct CalorimeterCountersDataPacket
     {
-      uint32_t counter;
-      CalorimeterCountersDataPacket() : counter(0) {}
+      uint16_t numberOfCounters;
+      CalorimeterCountersDataPacket() : numberOfCounters(0) {}
     };
 
     std::vector<std::pair<CalorimeterHitDataPacket, std::vector<uint16_t>>>* GetCalorimeterHitData(size_t blockIndex) const;

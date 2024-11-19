@@ -223,36 +223,44 @@ namespace mu2e {
 
 
   // Get Calo Counters Data Packet
-  /*
   std::vector<std::pair<mu2e::CalorimeterDataDecoder::CalorimeterCountersDataPacket, std::vector<uint32_t>>>* mu2e::CalorimeterDataDecoder::GetCalorimeterCountersData(size_t blockIndex) const
   {
-    // a pair is created mapping the data packet to set of hits (?)
     std::vector<std::pair<mu2e::CalorimeterDataDecoder::CalorimeterCountersDataPacket, std::vector<uint32_t>>> *output = new std::vector<std::pair<mu2e::CalorimeterDataDecoder::CalorimeterCountersDataPacket, std::vector<uint32_t>>>();
   
     // get data block at given index
-    auto dataPtr = dataAtBlockIndex(blockIndex);
-    if (dataPtr == nullptr) return output;
+    DTCLib::DTC_DataBlock const * dataBlock = dataAtBlockIndex(blockIndex);
+    if (dataBlock == nullptr) return output;
 
-    // check size of hit data packet
-    static_assert(sizeof(mu2e::CalorimeterDataDecoder::CalorimeterCountersDataPacket) % 2 == 0);
-    
-    //Get data in 32-bit words
-    size_t headerSize = sizeof(*event_.GetHeader());
-    size_t payloadSize = data_.size() - headerSize;
-    auto payload32bitPtr = reinterpret_cast<uint32_t const*>(dataPtr + headerSize);
-    std::vector<uint32_t> payload32bitData;
-    for (uint word=0; word<payloadSize/4; word++){
-      payload32bitData.push_back(*(payload32bitPtr + word));
+    DTCLib::DTC_DataHeaderPacket* blockHeader = dataBlock->GetHeader().get();
+    size_t blockSize = dataBlock->byteSize;
+    size_t nPackets = blockHeader->GetPacketCount();
+    size_t dataSize = blockSize - 16;
+
+    auto blockDataPtr = dataBlock->GetData();
+
+    if (nPackets == 0){ //Empty packet
+      TLOG(TLVL_DEBUG) << "CalorimeterDataDecoder::GetCalorimeterCountersData : no packets -- disabled ROC?";
+      return output;
     }
 
-    //uint nSamples = payload32bitData.size();
+    if (dataSize%4 != 0){ //Data not multiple of 32-bit words
+      TLOG(TLVL_WARNING) << "CalorimeterDataDecoder::GetCalorimeterCountersData : data size (" << dataSize << ") is not multiple of 32-bit";
+      return output;
+    }
+    
+    uint16_t nCounters = dataSize / 4;
+    //Create output 
+	  output->emplace_back(mu2e::CalorimeterDataDecoder::CalorimeterCountersDataPacket(), std::vector<uint32_t>(nCounters));
+    output->back().first.numberOfCounters = nCounters;
 
-    CalorimeterCountersDataPacket countersPacket(payload32bitData);
-
-    output->emplace_back(countersPacket, payload32bitData);
+    //Get data in 32-bit words
+    auto data32bitPtr = reinterpret_cast<const uint32_t *>(blockDataPtr);
+    for (uint word=0; word<nCounters; word++){
+      output->back().second[word] = (*(data32bitPtr + word));
+    }
 
     return output;
   }
-  */
+  
 
 } // namespace mu2e
