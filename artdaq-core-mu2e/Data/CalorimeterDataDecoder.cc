@@ -256,7 +256,7 @@ namespace mu2e {
       //After waveform
       output->back().first.LastSampleMarker = reader[lastSampleMarkerIndex];
       output->back().first.ErrorFlags = reader[lastSampleMarkerIndex+1];
-      output->back().first.Time = (reader[lastSampleMarkerIndex+2] << 12) | reader[lastSampleMarkerIndex+3] ;
+      output->back().first.Time = reader[lastSampleMarkerIndex+2] | (reader[lastSampleMarkerIndex+3] << 12) ;
       output->back().first.IndexOfMaxDigitizerSample = reader[lastSampleMarkerIndex+4];
       output->back().first.NumberOfSamples = reader[lastSampleMarkerIndex+5];    
 
