@@ -16,7 +16,7 @@ namespace mu2e {
       auto hdr = dataPtr->GetHeader(); // get the header
       // check that the subsystem is the calo and the version is correct:
       if (hdr->GetSubsystem() != DTCLib::DTC_Subsystem_Calorimeter || hdr->GetVersion() > 1){
-        TLOG(TLVL_ERROR) << "CalorimeterDataDecoder CONSTRUCTOR: First block has unexpected type/version " << hdr->GetSubsystem() << "/" << static_cast<int>(hdr->GetVersion()) << " (expected " << static_cast<int>(DTCLib::DTC_Subsystem_Calorimeter) << "/[0,1])";
+        TLOG(TLVL_ERROR) << "CalorimeterDataDecoder CONSTRUCTOR: First block has unexpected type/version " << static_cast<int>(hdr->GetSubsystem()) << "/" << static_cast<int>(hdr->GetVersion()) << " (expected " << static_cast<int>(DTCLib::DTC_Subsystem_Calorimeter) << "/[0,1])";
       }
     }
   }
@@ -195,7 +195,10 @@ namespace mu2e {
   
     // get data block at given index
     DTCLib::DTC_DataBlock const * dataBlock = dataAtBlockIndex(blockIndex);
-    if (dataBlock == nullptr) return output;
+    if (dataBlock == nullptr){ //Empty block
+      TLOG(TLVL_WARNING) << "CalorimeterDataDecoder::GetCalorimeterHitTestData : empty block " << blockIndex;
+      return output;
+    }
 
     DTCLib::DTC_DataHeaderPacket* blockHeader = dataBlock->GetHeader().get();
     size_t blockSize = dataBlock->byteSize;
@@ -205,7 +208,7 @@ namespace mu2e {
     auto blockDataPtr = dataBlock->GetData();
 
     if (nPackets == 0){ //Empty packet
-      TLOG(TLVL_DEBUG) << "CalorimeterDataDecoder::GetCalorimeterHitTestData : no packets -- disabled ROC?\n";
+      TLOG(TLVL_DEBUG) << "CalorimeterDataDecoder::GetCalorimeterHitTestData : no packets in block " << blockIndex << " -- disabled ROC?\n";
       return output;
     }
     
@@ -216,7 +219,7 @@ namespace mu2e {
       
       //Make sure first word is 0xAAA
       if (reader[0] != 0xAAA){
-        TLOG(TLVL_ERROR) << "CalorimeterDataDecoder::GetCalorimeterHitTestData : BeginMarker is " << std::hex << reader[0] << std::dec << " instead of 0xAAA\n";
+        TLOG(TLVL_ERROR) << "CalorimeterDataDecoder::GetCalorimeterHitTestData : in block " << blockIndex << " hit " << output->size() << " BeginMarker is " << std::hex << reader[0] << std::dec << " instead of 0xAAA\n";
         return output;
       }
       
@@ -253,13 +256,24 @@ namespace mu2e {
       //After waveform
       output->back().first.LastSampleMarker = reader[lastSampleMarkerIndex];
       output->back().first.ErrorFlags = reader[lastSampleMarkerIndex+1];
-      output->back().first.Time = (reader[lastSampleMarkerIndex+2] << 12) | reader[lastSampleMarkerIndex+3] ;
+      output->back().first.Time = reader[lastSampleMarkerIndex+2] | (reader[lastSampleMarkerIndex+3] << 12) ;
       output->back().first.IndexOfMaxDigitizerSample = reader[lastSampleMarkerIndex+4];
       output->back().first.NumberOfSamples = reader[lastSampleMarkerIndex+5];    
 
+      //Waveform reading check
+      if (output->back().first.NumberOfSamples != nSamples){
+        TLOG(TLVL_ERROR) << "CalorimeterDataDecoder::GetCalorimeterHitTestData : "
+                         << "in block " << blockIndex << " hit " << output->size()
+                         << " NumberOfSamples is " << output->back().first.NumberOfSamples
+                         << " but waveform is " << nSamples << " samples long\n";
+        return output;
+      }
+
       //Advance to the next 16-byte packet
-      float hitByteSize = nSamples*1.5 + sizeof(output->back().first);
-      uint8_t hitPackets = uint8_t(std::ceil(hitByteSize/16)); //number of 16-byte packets this hit occupied
+      size_t totalWordsRead = lastSampleMarkerIndex+6;
+      size_t nTwoPacketsRead = totalWordsRead/21; //There are 21 12-bit words every 2 packets
+      float nBytesRead = totalWordsRead*1.5 + (0.5*nTwoPacketsRead); //12 bits for every word + 4 extra bits every 2 packets
+      uint8_t hitPackets = uint8_t(std::ceil(nBytesRead/16)); //number of 16-byte packets this hit occupied
       blockPos += hitPackets*16; //advance by 16 bytes per packet
     }
 

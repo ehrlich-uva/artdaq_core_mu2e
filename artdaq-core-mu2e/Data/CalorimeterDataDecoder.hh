@@ -26,14 +26,19 @@ namespace mu2e {
       public:
         Data12bitReader(const uint16_t* dataPtr) : dataPtr(dataPtr) {}
 
-        uint16_t operator[](size_t index) const {
-          uint16_t temp;
-          size_t wordIndex1 = (index * 3) / 4;
+        uint16_t operator[](size_t index) const { //FIXME: This algorithm is very complicated, might want to optimize
+
+          int wordInTwoPackets = index % 21;
+          int nTwoPackets = (index - wordInTwoPackets) / 21;
+          int startingLetter = wordInTwoPackets % 4;
+
+          size_t wordIndex1 = nTwoPackets*16 + ((wordInTwoPackets * 3) / 4);
           size_t wordIndex2 = wordIndex1+1;
           uint16_t word1 = dataPtr[wordIndex1%2==0?wordIndex1+1:wordIndex1-1];
           uint16_t word2 = dataPtr[wordIndex2%2==0?wordIndex2+1:wordIndex2-1];
 
-          switch (index % 4) {
+          uint16_t temp;
+          switch (startingLetter) {
             case 0:
               temp = (word1 >> 4) & 0x0FFF;
               break;
@@ -44,9 +49,10 @@ namespace mu2e {
               temp = ((word1 & 0x00FF) << 4) | ((word2 & 0xF000) >> 12);
               break;
             case 3:
-              temp = word2 & 0x0FFF;
+              temp = word1 & 0x0FFF;
               break;
           }
+
           return temp;
         }
     };
