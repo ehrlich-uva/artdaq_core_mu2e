@@ -112,6 +112,7 @@ public:
 	std::vector<CRVHit> GetCRVHits(size_t blockIndex) const;
 
 };
+  using CRVDataDecoders = std::vector<CRVDataDecoder>;
 }  // namespace mu2e
 
 #endif  // ARTDAQ_CORE_MU2E_DATA_CRVDATADECODER_HH
