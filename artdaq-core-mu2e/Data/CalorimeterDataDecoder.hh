@@ -1,9 +1,8 @@
 #ifndef ARTDAQ_CORE_MU2E_DATA_CALORIMETERDATADECODER_HH
 #define ARTDAQ_CORE_MU2E_DATA_CALORIMETERDATADECODER_HH
 
-#include "artdaq-core-mu2e/Data/DTCDataDecoder.hh"
 
-#include "TRACE/tracemf.h"
+#include "artdaq-core-mu2e/Data/DTCDataDecoder.hh"
 
 #include <messagefacility/MessageLogger/MessageLogger.h> // Putting this here so that Offline/DAQ/src/FragmentAna_module.cc can use it
 
@@ -142,5 +141,7 @@ namespace mu2e {
     std::unique_ptr<CalorimeterFooterPacket> GetCalorimeterFooter(size_t blockIndex) const;
     std::vector<std::pair<CalorimeterHitDataPacket, uint16_t>> GetCalorimeterHitsForTrigger(size_t blockIndex) const;
   };
+
+  using CalorimeterDataDecoders = std::vector<CalorimeterDataDecoder>;
 }  // namespace mu2e
-#endif 
+#endif /* mu2e_artdaq_Data_CalorimeterDataDecoder_hh */

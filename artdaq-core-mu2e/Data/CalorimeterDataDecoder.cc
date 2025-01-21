@@ -320,6 +320,5 @@ namespace mu2e {
 
     return output;
   }
-  
 
 } // namespace mu2e
