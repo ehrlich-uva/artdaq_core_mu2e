@@ -16,7 +16,7 @@ namespace mu2e {
       auto hdr = dataPtr->GetHeader(); // get the header
       // check that the subsystem is the calo and the version is correct:
       if (hdr->GetSubsystem() != DTCLib::DTC_Subsystem_Calorimeter || hdr->GetVersion() > 1){
-        TLOG(TLVL_ERROR) << "CalorimeterDataDecoder CONSTRUCTOR: First block has unexpected type/version " << static_cast<int>(hdr->GetSubsystem()) << "/" << static_cast<int>(hdr->GetVersion()) << " (expected " << static_cast<int>(DTCLib::DTC_Subsystem_Calorimeter) << "/[0,1])";
+        //TLOG(TLVL_WARNING) << "CalorimeterDataDecoder CONSTRUCTOR: First block has unexpected type/version " << static_cast<int>(hdr->GetSubsystem()) << "/" << static_cast<int>(hdr->GetVersion()) << " (expected " << static_cast<int>(DTCLib::DTC_Subsystem_Calorimeter) << "/[0,1])";
       }
     }
   }
@@ -29,7 +29,7 @@ namespace mu2e {
       auto dataPtr = dataAtBlockIndex(0);
       auto hdr = dataPtr->GetHeader();
       if (hdr->GetSubsystem() != DTCLib::DTC_Subsystem_Calorimeter || hdr->GetVersion() > 1){
-        TLOG(TLVL_ERROR) << "CalorimeterDataDecoder CONSTRUCTOR: First block has unexpected type/version " << hdr->GetSubsystem() << "/" << static_cast<int>(hdr->GetVersion()) << " (expected " << static_cast<int>(DTCLib::DTC_Subsystem_Calorimeter) << "/[0,1])";
+        //TLOG(TLVL_WARNING) << "CalorimeterDataDecoder CONSTRUCTOR: First block has unexpected type/version " << hdr->GetSubsystem() << "/" << static_cast<int>(hdr->GetVersion()) << " (expected " << static_cast<int>(DTCLib::DTC_Subsystem_Calorimeter) << "/[0,1])";
       }
     }
   }
@@ -220,6 +220,9 @@ namespace mu2e {
       //Make sure first word is 0xAAA
       if (reader[0] != 0xAAA){
         TLOG(TLVL_ERROR) << "CalorimeterDataDecoder::GetCalorimeterHitTestData : in block " << blockIndex << " hit " << output->size() << " BeginMarker is " << std::hex << reader[0] << std::dec << " instead of 0xAAA\n";
+        //Return minimal hit and stop decoding this ROC
+        output->emplace_back(mu2e::CalorimeterDataDecoder::CalorimeterHitTestDataPacket(), std::vector<uint16_t>());
+        output->back().first.BeginMarker = reader[0];
         return output;
       }
       
@@ -232,8 +235,13 @@ namespace mu2e {
           break;
         }
       }
+
+      //0xFFF not found
       if (lastSampleMarkerIndex == -1){
         TLOG(TLVL_ERROR) << "CalorimeterDataDecoder::GetCalorimeterHitTestData : LastSampleMarker 0xFFF not found in the payload!" << std::endl;
+        //Return minimal hit and stop decoding this ROC
+        output->emplace_back(mu2e::CalorimeterDataDecoder::CalorimeterHitTestDataPacket(), std::vector<uint16_t>());
+        output->back().first.LastSampleMarker = 0;
         return output;
       }
 
