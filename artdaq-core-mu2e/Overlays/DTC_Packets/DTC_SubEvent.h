@@ -61,14 +61,33 @@ public:
 		UpdateHeader();
 	}
 
-	DTC_Subsystem GetSubsystem() const { return static_cast<DTC_Subsystem>(header_.source_subsystem); }
+	DTC_Subsystem GetSubsystem(uint link = 0) const {
+		switch(link){
+			case 0: return static_cast<DTC_Subsystem>(header_.link0_subsystem); break;
+			case 1: return static_cast<DTC_Subsystem>(header_.link1_subsystem); break;
+			case 2: return static_cast<DTC_Subsystem>(header_.link2_subsystem); break;
+			case 3: return static_cast<DTC_Subsystem>(header_.link3_subsystem); break;
+			case 4: return static_cast<DTC_Subsystem>(header_.link4_subsystem); break;
+			case 5: return static_cast<DTC_Subsystem>(header_.link5_subsystem); break;
+			default: return static_cast<DTC_Subsystem>(0);
+		}
+	}
+	bool HasSubsystem(DTC_Subsystem subsys) const {
+		if (static_cast<DTC_Subsystem>(header_.link0_subsystem) == subsys) return true;
+		if (static_cast<DTC_Subsystem>(header_.link1_subsystem) == subsys) return true;
+		if (static_cast<DTC_Subsystem>(header_.link2_subsystem) == subsys) return true;
+		if (static_cast<DTC_Subsystem>(header_.link3_subsystem) == subsys) return true;
+		if (static_cast<DTC_Subsystem>(header_.link4_subsystem) == subsys) return true;
+		if (static_cast<DTC_Subsystem>(header_.link5_subsystem) == subsys) return true;
+		return false;
+	}
 	void SetDTCMAC(uint8_t mac) {
 		header_.dtc_mac = mac;
 	}
 	void SetSourceDTC(uint8_t id, DTC_Subsystem subsystem = DTC_Subsystem_Other)
 	{
 		header_.source_dtc_id = id;
-		header_.source_subsystem = static_cast<uint8_t>(subsystem);
+		header_.link0_subsystem = static_cast<uint8_t>(subsystem); //This is deprecated TODO FIX
 	}
 	const DTC_SubEventHeader* GetHeader() const { return &header_; }
 	void UpdateHeader();
