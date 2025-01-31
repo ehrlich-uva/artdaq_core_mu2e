@@ -87,7 +87,12 @@ public:
 	void SetSourceDTC(uint8_t id, DTC_Subsystem subsystem = DTC_Subsystem_Other)
 	{
 		header_.source_dtc_id = id;
-		header_.link0_subsystem = static_cast<uint8_t>(subsystem); //This is deprecated TODO FIX
+		header_.link0_subsystem = static_cast<uint8_t>(subsystem);
+		header_.link1_subsystem = static_cast<uint8_t>(subsystem);
+		header_.link2_subsystem = static_cast<uint8_t>(subsystem);
+		header_.link3_subsystem = static_cast<uint8_t>(subsystem);
+		header_.link4_subsystem = static_cast<uint8_t>(subsystem);
+		header_.link5_subsystem = static_cast<uint8_t>(subsystem);
 	}
 	const DTC_SubEventHeader* GetHeader() const { return &header_; }
 	void UpdateHeader();
