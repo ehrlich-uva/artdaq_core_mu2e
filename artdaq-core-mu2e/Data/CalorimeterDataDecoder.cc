@@ -200,6 +200,11 @@ namespace mu2e {
       return output;
     }
 
+    if(dataBlock->GetHeader()->GetSubsystem() != DTCLib::DTC_Subsystem_Calorimeter) {
+      TLOG(TLVL_DEBUG) << "CalorimeterDataDecoder::GetCalorimeterHitTestData : this block is from different subsystem: " << dataBlock->GetHeader()->GetSubsystem();
+      return output;
+    }
+
     DTCLib::DTC_DataHeaderPacket* blockHeader = dataBlock->GetHeader().get();
     size_t blockSize = dataBlock->byteSize;
     size_t nPackets = blockHeader->GetPacketCount();
