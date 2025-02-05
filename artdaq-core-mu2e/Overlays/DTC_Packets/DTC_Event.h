@@ -104,7 +104,7 @@ public:
 		for(auto& subevt : sub_events_) {
 			if(subevt.HasSubsystem(subsys)) {
 				for(auto& datablock : subevt.GetDataBlocks()) {
-					if(static_cast<DTC_Subsystem>(datablock.GetHeader()->GetSubsystemID()) == subsys) {
+					if(datablock.GetHeader()->GetSubsystem() == subsys) {
 						output.push_back(datablock);
 					}
 				}
