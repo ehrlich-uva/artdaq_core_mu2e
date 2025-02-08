@@ -1,4 +1,5 @@
 #include "artdaq-core-mu2e/Data/CRVDataDecoder.hh"
+#include "artdaq-core-mu2e/Overlays/DTC_Types/Exceptions.h"
 
 std::unique_ptr<mu2e::CRVDataDecoder::CRVROCStatusPacket> mu2e::CRVDataDecoder::GetCRVROCStatusPacket(size_t blockIndex) const
 {
@@ -40,6 +41,8 @@ std::vector<mu2e::CRVDataDecoder::CRVHit> mu2e::CRVDataDecoder::GetCRVHits(size_
             std::cerr << "TriggerCount " << crvRocHdr->TriggerCount << std::endl;
             std::cerr << "EventWindowTag " << crvRocHdr->GetEventWindowTag() << std::endl;
             std::cerr << "************************************************" << std::endl;
+
+            throw std::runtime_error("Corrupted CRV data");
           }
         }
 
