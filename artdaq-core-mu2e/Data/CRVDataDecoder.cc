@@ -41,6 +41,7 @@ bool mu2e::CRVDataDecoder::GetCRVHits(size_t blockIndex, std::vector<mu2e::CRVDa
             std::cerr << "EventWindowTag " << crvRocHdr->GetEventWindowTag() << std::endl;
             std::cerr << "************************************************" << std::endl;
 
+            crvHits.clear();
             return false;
           }
         }
